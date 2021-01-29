@@ -242,24 +242,34 @@ class TestField():
         assert widget.show_field.toPlainText() == res_1 + res_2
 
     @staticmethod
-    def test_get_stop(init_files_directories):
+    def test_get_stop(qtbot, mocker, init_files_directories):
         main_widget = search.Main()
         widget = search.Field(main_widget)
+
+        def mock_check_input_text(self):
+            widget.find_start.setDisabled(False)
+
+        def mock_start_find(self):
+            widget.start_time = time.time()
+            widget.list_dir = search.ListDir()
+            widget.list_dir.append(str(init_files_directories))
+            widget.find_start.setChecked(True)
+            self.find_stop.setDisabled(False)
+
+        mocker.patch('search.Field.check_input_text', mock_check_input_text)
+        mocker.patch('search.Field.start_find', mock_start_find)
         assert widget.list_dir is None
         assert widget.show_field.toPlainText() == ''
         assert widget.find_start.isEnabled() is False
         assert widget.find_start.isChecked() is False
         assert widget.find_stop.isEnabled() is False
 
-        widget.find_file_name.setText('*')
-        widget.find_path.setText(str(init_files_directories))
         widget.check_input_text()
         assert widget.find_start.isEnabled() is True
         assert widget.find_start.isChecked() is False
         assert widget.find_stop.isEnabled() is False
 
         widget.start_find()
-        widget.find_start.setChecked(True)
         assert widget.list_dir is not None
         assert widget.find_start.isEnabled() is True
         assert widget.find_start.isChecked() is True
